@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { AuthModal } from "@/components/auth-modal";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,11 @@ export function CommentSection({ postId, comments }: CommentSectionProps) {
     const [content, setContent] = useState("");
     const [isPending, startTransition] = useTransition();
     const [optimisticComments, setOptimisticComments] = useState(comments);
+
+    // Sync optimistic state with props to prevent race conditions
+    useEffect(() => {
+        setOptimisticComments(comments);
+    }, [comments]);
 
     const handleSubmit = () => {
         if (!content.trim()) return;

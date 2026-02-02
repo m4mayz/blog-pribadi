@@ -40,7 +40,7 @@ export function Navbar() {
                 ${isVisible ? "translate-y-0" : "-translate-y-full"}
                 ${
                     isScrolled
-                        ? "bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-sm"
+                        ? "bg-background/80 backdrop-blur-md border-b border-border/50 shadow-sm support-backdrop-blur:bg-background/60"
                         : "bg-background/60 backdrop-blur-md"
                 }
             `}

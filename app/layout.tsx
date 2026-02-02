@@ -3,7 +3,6 @@ import { EB_Garamond, Karla, Josefin_Sans } from "next/font/google";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 import "./uploadthing.css";
-import "./uploadthing.css";
 
 // Serif for headings - timeless classical elegance
 const ebGaramond = EB_Garamond({

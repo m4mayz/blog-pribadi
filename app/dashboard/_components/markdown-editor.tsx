@@ -220,7 +220,7 @@ export function MarkdownEditor({
                 value={title}
                 onChange={(e) => onTitleChange(e.target.value)}
                 placeholder="Post title..."
-                className="border-0 bg-transparent text-3xl font-bold placeholder:text-muted-foreground/50 focus-visible:ring-0 px-0 mb-4"
+                className="border-0 bg-transparent text-3xl md:text-3xl font-bold placeholder:text-muted-foreground/50 focus-visible:ring-0 px-0 mb-4 h-auto"
             />
 
             {/* Toolbar */}

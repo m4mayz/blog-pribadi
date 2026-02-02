@@ -32,9 +32,14 @@ interface PostPageClientProps {
         comments: Comment[];
     };
     readingTime: number;
+    adminId?: string;
 }
 
-export function PostPageClient({ post, readingTime }: PostPageClientProps) {
+export function PostPageClient({
+    post,
+    readingTime,
+    adminId,
+}: PostPageClientProps) {
     const [isCommentOpen, setIsCommentOpen] = useState(false);
 
     return (
@@ -94,12 +99,12 @@ export function PostPageClient({ post, readingTime }: PostPageClientProps) {
                     </header>
 
                     {/* Featured Image - now below header */}
-                    <div className="aspect-21/9 overflow-hidden rounded-lg mb-12">
+                    <div className="aspect-video overflow-hidden  mb-12">
                         <Image
                             src={post.thumbnail}
                             alt={post.title}
-                            width={1200}
-                            height={514}
+                            width={1280}
+                            height={720}
                             priority
                             className="object-cover w-full h-full"
                         />
@@ -121,6 +126,7 @@ export function PostPageClient({ post, readingTime }: PostPageClientProps) {
                 }))}
                 isOpen={isCommentOpen}
                 onClose={() => setIsCommentOpen(false)}
+                adminId={adminId}
             />
         </>
     );

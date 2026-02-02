@@ -8,6 +8,16 @@ import { revalidatePath } from "next/cache";
 // Post Actions (Admin Only)
 // ========================================
 
+// ... imports
+
+export async function getAdminUser() {
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (!adminEmail) return null;
+    return prisma.user.findUnique({
+        where: { email: adminEmail },
+    });
+}
+
 export async function createPost(data: {
     title: string;
     slug: string;

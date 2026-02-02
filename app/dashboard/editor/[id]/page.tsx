@@ -3,11 +3,19 @@
 import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { MarkdownEditor } from "../../_components/markdown-editor";
+import { PostMetadataForm } from "../../_components/post-metadata-form";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { getPostById, updatePost, deletePost } from "@/lib/actions";
-import { ArrowLeft, Save, Loader2, Trash2, ExternalLink } from "lucide-react";
+import {
+    ArrowLeft,
+    Save,
+    Loader2,
+    Trash2,
+    ExternalLink,
+    Settings2,
+} from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
@@ -31,11 +39,14 @@ export default function EditPostPage({ params }: EditPostPageProps) {
     const [isPending, startTransition] = useTransition();
     const [isDeleting, setIsDeleting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [showMetadata, setShowMetadata] = useState(true);
 
     const [postId, setPostId] = useState<string>("");
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [slug, setSlug] = useState("");
+    const [excerpt, setExcerpt] = useState("");
+    const [thumbnail, setThumbnail] = useState("");
     const [published, setPublished] = useState(false);
 
     useEffect(() => {
@@ -53,6 +64,8 @@ export default function EditPostPage({ params }: EditPostPageProps) {
             setTitle(post.title);
             setContent(post.content);
             setSlug(post.slug);
+            setExcerpt(post.excerpt || "");
+            setThumbnail(post.thumbnail);
             setPublished(post.published);
             setIsLoading(false);
         }
@@ -66,11 +79,24 @@ export default function EditPostPage({ params }: EditPostPageProps) {
             return;
         }
 
+        if (!slug.trim()) {
+            toast.error("Please provide a URL slug");
+            return;
+        }
+
+        if (!thumbnail.trim()) {
+            toast.error("Please add a featured image");
+            return;
+        }
+
         startTransition(async () => {
             try {
                 await updatePost(postId, {
                     title: title.trim(),
+                    slug: slug.trim(),
+                    excerpt: excerpt.trim() || undefined,
                     content,
+                    thumbnail: thumbnail.trim(),
                     published,
                 });
 
@@ -106,27 +132,40 @@ export default function EditPostPage({ params }: EditPostPageProps) {
     return (
         <div className="flex flex-col h-screen">
             {/* Header */}
-            <header className="flex items-center justify-between border-b border-border px-6 py-4">
+            <header className="flex items-center justify-between border-b border-border px-6 py-4 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" asChild>
                         <Link href="/dashboard">
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
                     </Button>
-                    <h1 className="text-lg font-semibold">Edit Post</h1>
-                    {published && slug && (
-                        <Link
-                            href={`/${slug}`}
-                            target="_blank"
-                            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-                        >
-                            <ExternalLink className="h-3 w-3" />
-                            View
-                        </Link>
-                    )}
+                    <div>
+                        <h1 className="text-lg font-semibold">Edit Post</h1>
+                        {published && slug && (
+                            <Link
+                                href={`/${slug}`}
+                                target="_blank"
+                                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                                <ExternalLink className="h-3 w-3" />
+                                View live post
+                            </Link>
+                        )}
+                    </div>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
+                    {" "}
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowMetadata(!showMetadata)}
+                        className="gap-2"
+                    >
+                        <Settings2 className="h-4 w-4" />
+                        {showMetadata ? "Hide" : "Show"} Details
+                    </Button>
+                    <div className="h-6 w-px bg-border" />
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
                             <Button
@@ -163,18 +202,19 @@ export default function EditPostPage({ params }: EditPostPageProps) {
                             </AlertDialogFooter>
                         </AlertDialogContent>
                     </AlertDialog>
-
                     <div className="flex items-center gap-2">
                         <Switch
                             id="published"
                             checked={published}
                             onCheckedChange={setPublished}
                         />
-                        <Label htmlFor="published" className="text-sm">
+                        <Label
+                            htmlFor="published"
+                            className="text-sm font-medium"
+                        >
                             {published ? "Published" : "Draft"}
                         </Label>
                     </div>
-
                     <Button onClick={handleSave} disabled={isPending}>
                         {isPending ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -186,16 +226,44 @@ export default function EditPostPage({ params }: EditPostPageProps) {
                 </div>
             </header>
 
-            {/* Editor */}
-            <div className="flex-1 overflow-hidden p-6">
-                <div className="mx-auto max-w-4xl h-full">
-                    <MarkdownEditor
-                        title={title}
-                        content={content}
-                        onTitleChange={setTitle}
-                        onContentChange={setContent}
-                    />
+            {/* Main Content */}
+            <div className="flex-1 overflow-hidden flex">
+                {/* Editor */}
+                <div className="flex-1 overflow-hidden p-6">
+                    <div className="mx-auto max-w-4xl h-full">
+                        <MarkdownEditor
+                            title={title}
+                            content={content}
+                            onTitleChange={setTitle}
+                            onContentChange={setContent}
+                        />
+                    </div>
                 </div>
+
+                {/* Metadata Sidebar */}
+                {showMetadata && (
+                    <div className="w-96 border-l border-border overflow-y-auto bg-background">
+                        <div className="p-6">
+                            <div className="mb-6">
+                                <h2 className="text-lg font-semibold mb-1">
+                                    Post Details
+                                </h2>
+                                <p className="text-sm text-muted-foreground">
+                                    Configure metadata and appearance
+                                </p>
+                            </div>
+                            <PostMetadataForm
+                                slug={slug}
+                                excerpt={excerpt}
+                                thumbnail={thumbnail}
+                                onSlugChange={setSlug}
+                                onExcerptChange={setExcerpt}
+                                onThumbnailChange={setThumbnail}
+                                canEditSlug={true}
+                            />
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

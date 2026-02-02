@@ -14,12 +14,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         async jwt({ token, user }) {
             if (user) {
                 token.id = user.id;
+                // Add role to token
+                const dbUser = await prisma.user.findUnique({
+                    where: { id: user.id },
+                    select: { role: true },
+                });
+                token.role = dbUser?.role || "user";
             }
             return token;
         },
         async session({ session, token }) {
             if (token?.id) {
                 session.user.id = token.id as string;
+                session.user.role = token.role as string;
             }
             return session;
         },
@@ -28,7 +35,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
 export async function isAdmin() {
     const session = await auth();
-    if (!session?.user?.email) return false;
+    if (!session?.user) return false;
+
+    // Check role from session
+    if (session.user.role === "admin") return true;
+
+    // Fallback: check admin email for backward compatibility
     const adminEmail = process.env.ADMIN_EMAIL;
-    return session.user.email === adminEmail;
+    if (adminEmail && session.user.email === adminEmail) {
+        // Auto-promote to admin if email matches
+        await prisma.user.update({
+            where: { email: adminEmail },
+            data: { role: "admin" },
+        });
+        return true;
+    }
+
+    return false;
 }

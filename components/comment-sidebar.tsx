@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,6 +20,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 
 interface Comment {
     id: string;
@@ -37,6 +38,7 @@ interface CommentSidebarProps {
     comments: Comment[];
     isOpen: boolean;
     onClose: () => void;
+    adminId?: string;
 }
 
 // ... (existing imports, but remove useState if confirm logic moves - actually useState is fine for optimistics)
@@ -46,11 +48,17 @@ export function CommentSidebar({
     comments,
     isOpen,
     onClose,
+    adminId,
 }: CommentSidebarProps) {
     const { data: session } = useSession();
     const [content, setContent] = useState("");
     const [isPending, startTransition] = useTransition();
     const [optimisticComments, setOptimisticComments] = useState(comments);
+
+    // Sync optimistic state with props to prevent race conditions
+    useEffect(() => {
+        setOptimisticComments(comments);
+    }, [comments]);
 
     const handleSubmit = () => {
         if (!content.trim()) return;
@@ -199,6 +207,16 @@ export function CommentSidebar({
                                                         {comment.user.name ||
                                                             "Anonymous"}
                                                     </p>
+                                                    {adminId &&
+                                                        adminId ===
+                                                            comment.user.id && (
+                                                            <Badge
+                                                                variant="default"
+                                                                className="h-4 px-1 text-[10px]"
+                                                            >
+                                                                Author
+                                                            </Badge>
+                                                        )}
                                                     <span className="text-xs text-muted-foreground">
                                                         {formatDistanceToNow(
                                                             new Date(

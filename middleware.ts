@@ -11,9 +11,12 @@ export default auth((req) => {
             return NextResponse.redirect(new URL("/api/auth/signin", req.url));
         }
 
-        // Check if user is admin
-        const adminEmail = process.env.ADMIN_EMAIL;
-        if (req.auth?.user?.email !== adminEmail) {
+        // Check if user is admin (role-based with email fallback)
+        const isAdmin =
+            req.auth?.user?.role === "admin" ||
+            req.auth?.user?.email === process.env.ADMIN_EMAIL;
+
+        if (!isAdmin) {
             return NextResponse.redirect(new URL("/", req.url));
         }
     }

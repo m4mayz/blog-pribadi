@@ -53,7 +53,7 @@ export function PostGrid({ posts }: PostGridProps) {
                     placeholder="Search posts..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 h-12"
+                    className="pl-10 h-12 bg-card"
                 />
             </div>
 

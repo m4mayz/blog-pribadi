@@ -6,9 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // ========================================
@@ -74,6 +73,9 @@ model Post {
   title     String
   excerpt   String?
   content   String   @db.Text // Markdown content
+  thumbnail String   // Featured image URL (required)
+  views     Int      @default(0) // View counter
+  likes     Int      @default(0) // Like counter
   published Boolean  @default(false)
 
   comments Comment[]

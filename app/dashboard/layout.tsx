@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import { DashboardLayoutClient } from "./_components/dashboard-layout-client";
 
 export default async function DashboardLayout({
     children,
@@ -13,5 +14,5 @@ export default async function DashboardLayout({
         redirect("/");
     }
 
-    return <>{children}</>;
+    return <DashboardLayoutClient>{children}</DashboardLayoutClient>;
 }

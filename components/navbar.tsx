@@ -1,121 +1,73 @@
-import Link from "next/link";
-import { auth, signOut } from "@/auth";
-import { AuthModal } from "@/components/auth-modal";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { Button } from "@/components/ui/button";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+"use client";
 
-export async function Navbar() {
-    const session = await auth();
-    const isAdmin = session?.user?.email === process.env.ADMIN_EMAIL;
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { ThemeToggle } from "@/components/theme-toggle";
+
+export function Navbar() {
+    const [isVisible, setIsVisible] = useState(true);
+    const [isScrolled, setIsScrolled] = useState(false);
+    const [lastScrollY, setLastScrollY] = useState(0);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY;
+
+            // Add border/shadow when scrolled past threshold
+            setIsScrolled(currentScrollY > 20);
+
+            // Show navbar when scrolling up or near top
+            if (currentScrollY < lastScrollY || currentScrollY < 50) {
+                setIsVisible(true);
+            }
+            // Hide when scrolling down past threshold (150px for better UX)
+            else if (currentScrollY > lastScrollY && currentScrollY > 150) {
+                setIsVisible(false);
+            }
+
+            setLastScrollY(currentScrollY);
+        };
+
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, [lastScrollY]);
 
     return (
-        <nav className="fixed top-0 left-0 right-0 z-50">
-            <div className="mx-auto max-w-5xl mt-6 px-6">
-                <div className="bg-background/80 backdrop-blur-md border border-border/50 rounded-full px-6 h-14 flex items-center justify-between shadow-sm">
-                    {/* Logo */}
+        <header
+            className={`
+                fixed top-0 left-0 right-0 z-50
+                transition-all duration-300 ease-in-out
+                ${isVisible ? "translate-y-0" : "-translate-y-full"}
+                ${
+                    isScrolled
+                        ? "bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-sm"
+                        : "bg-background/60 backdrop-blur-md"
+                }
+            `}
+            style={{
+                transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+            }}
+        >
+            <nav className="container-compact">
+                <div className="h-16 flex items-center justify-between">
+                    {/* Logo with hover effect */}
                     <Link
                         href="/"
-                        className="font-serif text-lg font-bold tracking-tight"
+                        className="font-heading text-xl font-bold tracking-tight hover:text-primary transition-all duration-200 relative group"
                     >
-                        Akmal Zaidan&apos;s Blog
-                        <span className="text-primary">.</span>
+                        <span className="relative z-10">Amayy&#39;s Blog</span>
+                        <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-linear-to-r from-primary to-primary/50 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
                     </Link>
 
-                    {/* Links */}
-                    <div className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
-                        <Link
-                            href="/"
-                            className="hover:text-foreground transition-colors"
-                        >
-                            Home
-                        </Link>
-                        <Link
-                            href="/blog"
-                            className="hover:text-foreground transition-colors"
-                        >
-                            Writing
-                        </Link>
-                        <Link
-                            href="/about"
-                            className="hover:text-foreground transition-colors"
-                        >
-                            About
-                        </Link>
-                    </div>
-
-                    {/* Auth + Theme */}
-                    <div className="flex items-center gap-2">
-                        <ThemeToggle />
-                        {!session ? (
-                            <AuthModal />
-                        ) : (
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        className="relative h-8 w-8 rounded-full"
-                                    >
-                                        <Avatar className="h-8 w-8">
-                                            <AvatarImage
-                                                src={session.user?.image || ""}
-                                                alt={session.user?.name || ""}
-                                            />
-                                            <AvatarFallback>
-                                                {session.user?.name?.[0]?.toUpperCase()}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                    className="w-56"
-                                    align="end"
-                                    forceMount
-                                >
-                                    <DropdownMenuLabel className="font-normal">
-                                        <div className="flex flex-col space-y-1">
-                                            <p className="text-sm font-medium">
-                                                {session.user?.name}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {session.user?.email}
-                                            </p>
-                                        </div>
-                                    </DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    {isAdmin && (
-                                        <DropdownMenuItem asChild>
-                                            <Link href="/dashboard">
-                                                Dashboard
-                                            </Link>
-                                        </DropdownMenuItem>
-                                    )}
-                                    <DropdownMenuItem asChild>
-                                        <form
-                                            action={async () => {
-                                                "use server";
-                                                await signOut();
-                                            }}
-                                        >
-                                            <button className="w-full text-left text-red-600">
-                                                Sign Out
-                                            </button>
-                                        </form>
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        )}
+                    {/* Right section */}
+                    <div className="flex items-center gap-4">
+                        {/* Theme Toggle with enhanced styling */}
+                        <div className="relative">
+                            <ThemeToggle />
+                        </div>
                     </div>
                 </div>
-            </div>
-        </nav>
+            </nav>
+        </header>
     );
 }

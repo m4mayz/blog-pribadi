@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useSession } from "next-auth/react";
+import { AuthModal } from "@/components/auth-modal";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -69,7 +70,6 @@ export function CommentSection({ postId, comments }: CommentSectionProps) {
     return (
         <div className="space-y-6">
             <h2 className="text-2xl font-bold flex items-center gap-2">
-                <MessageCircle className="h-6 w-6" />
                 Comments ({optimisticComments.length})
             </h2>
 
@@ -116,14 +116,9 @@ export function CommentSection({ postId, comments }: CommentSectionProps) {
             ) : (
                 <Card>
                     <CardContent className="py-4 text-center text-muted-foreground">
-                        Please{" "}
-                        <a
-                            href="/api/auth/signin"
-                            className="underline hover:text-primary"
-                        >
-                            sign in
-                        </a>{" "}
-                        to leave a comment.
+                        <div className="flex items-center justify-center gap-1">
+                            Please <AuthModal /> to leave a comment.
+                        </div>
                     </CardContent>
                 </Card>
             )}

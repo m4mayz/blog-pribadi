@@ -13,6 +13,7 @@ export async function createPost(data: {
     slug: string;
     excerpt?: string;
     content: string;
+    thumbnail: string;
     published?: boolean;
 }) {
     if (!(await isAdmin())) {
@@ -25,11 +26,12 @@ export async function createPost(data: {
             slug: data.slug,
             excerpt: data.excerpt || "",
             content: data.content,
+            thumbnail: data.thumbnail,
             published: data.published || false,
         },
     });
 
-    revalidatePath("/blog");
+    revalidatePath("/");
     revalidatePath("/dashboard");
     return post;
 }
@@ -41,6 +43,7 @@ export async function updatePost(
         slug?: string;
         excerpt?: string;
         content?: string;
+        thumbnail?: string;
         published?: boolean;
     },
 ) {
@@ -53,8 +56,8 @@ export async function updatePost(
         data,
     });
 
-    revalidatePath("/blog");
-    revalidatePath(`/blog/${post.slug}`);
+    revalidatePath("/");
+    revalidatePath(`/${post.slug}`);
     revalidatePath("/dashboard");
     return post;
 }
@@ -68,7 +71,7 @@ export async function deletePost(id: string) {
         where: { id },
     });
 
-    revalidatePath("/blog");
+    revalidatePath("/");
     revalidatePath("/dashboard");
 }
 
@@ -90,12 +93,12 @@ export async function createComment(postId: string, content: string) {
         },
         include: {
             user: {
-                select: { name: true, image: true },
+                select: { id: true, name: true, image: true },
             },
         },
     });
 
-    revalidatePath(`/blog`);
+    revalidatePath(`/`);
     return comment;
 }
 
@@ -123,7 +126,33 @@ export async function deleteComment(commentId: string) {
         where: { id: commentId },
     });
 
-    revalidatePath("/blog");
+    revalidatePath("/");
+}
+
+// Increment post view counter
+export async function incrementPostViews(slug: string) {
+    await prisma.post.update({
+        where: { slug },
+        data: {
+            views: {
+                increment: 1,
+            },
+        },
+    });
+}
+
+// Toggle post like (anonymous - no auth required)
+export async function togglePostLike(postId: string, increment: boolean) {
+    await prisma.post.update({
+        where: { id: postId },
+        data: {
+            likes: {
+                [increment ? "increment" : "decrement"]: 1,
+            },
+        },
+    });
+
+    revalidatePath("/");
 }
 
 // ========================================
@@ -139,6 +168,8 @@ export async function getPosts(includeUnpublished = false) {
             slug: true,
             title: true,
             excerpt: true,
+            thumbnail: true,
+            views: true,
             published: true,
             createdAt: true,
             updatedAt: true,

@@ -7,8 +7,9 @@
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
-    --font-sans: var(--font-sans);
-    --font-serif: var(--font-serif);
+    --font-heading: var(--font-heading);
+    --font-body: var(--font-body);
+    --font-article-heading: var(--font-article-heading);
 
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
@@ -50,6 +51,7 @@
 
 :root {
     /* Modern Editorial Palette - Warmer Dark Mode */
+    /* Base font size: 16px (default), 20px for article prose */
     --background: oklch(0.99 0.01 220); /* Slightly tinted white */
     --foreground: oklch(0.12 0.02 260); /* Deep charcoal */
     --card: oklch(1 0 0);
@@ -125,6 +127,221 @@
     }
     body {
         @apply bg-background text-foreground tracking-tight;
+        font-family: var(--font-body);
+    }
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-family: var(--font-heading);
+        font-weight: 600;
+        line-height: 1.2;
+        letter-spacing: -0.025em;
+    }
+}
+
+/* Compact container - 768px max-width */
+.container-compact {
+    width: 100%;
+    max-width: 768px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+/* Medium.com inspired article prose styling */
+.prose-medium {
+    max-width: 768px;
+    margin-left: auto;
+    margin-right: auto;
+    font-family:
+        charter, Georgia, Cambria, "Times New Roman", Times, serif; /* Medium.com font stack */
+    font-size: 20px !important;
+    line-height: 1.58;
+    color: oklch(0.15 0.02 260); /* Dark gray instead of pure black */
+    letter-spacing: -0.003em;
+}
+
+.dark .prose-medium {
+    color: oklch(0.92 0.01 220); /* Softer white in dark mode */
+}
+
+.prose-medium > * + * {
+    margin-top: 1em;
+    margin-bottom: 0;
+}
+
+.prose-medium h1,
+.prose-medium h2,
+.prose-medium h3,
+.prose-medium h4 {
+    font-family: var(--font-article-heading), "Josefin Sans", sans-serif;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    color: oklch(0.1 0.02 260);
+    margin-top: 1.4em;
+}
+
+.dark .prose-medium h1,
+.dark .prose-medium h2,
+.dark .prose-medium h3,
+.dark .prose-medium h4 {
+    color: oklch(0.98 0.01 220);
+}
+
+.prose-medium h1 {
+    font-size: 1.8em;
+    margin-top: 1em;
+}
+
+.prose-medium h2 {
+    font-size: 1.25em;
+}
+
+.prose-medium h3 {
+    font-size: 1.15em;
+}
+
+.prose-medium h4 {
+    font-size: 1.1em;
+}
+
+.prose-medium p {
+    margin-top: 0.5em;
+    margin-bottom: 0;
+}
+
+.prose-medium h1 + p,
+.prose-medium h2 + p,
+.prose-medium h3 + p,
+.prose-medium h4 + p {
+    margin-top: 0.3em;
+}
+
+.prose-medium a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: oklch(0.7 0.02 260);
+    text-underline-offset: 2px;
+    transition: text-decoration-color 0.2s;
+}
+
+.prose-medium a:hover {
+    text-decoration-color: oklch(0.2 0.04 260);
+}
+
+.dark .prose-medium a:hover {
+    text-decoration-color: oklch(0.9 0.05 220);
+}
+
+.prose-medium strong {
+    font-weight: 700;
+    color: oklch(0.1 0.02 260);
+}
+
+.dark .prose-medium strong {
+    color: oklch(0.98 0.01 220);
+}
+
+.prose-medium em {
+    font-style: italic;
+}
+
+.prose-medium blockquote {
+    margin-bottom: 2em;
+    padding-left: 1.5em;
+    border-left: 3px solid oklch(0.2 0.04 260);
+    font-style: italic;
+    color: oklch(0.3 0.02 260);
+}
+
+.dark .prose-medium blockquote {
+    border-left-color: oklch(0.7 0.02 260);
+    color: oklch(0.75 0.02 260);
+}
+
+.prose-medium ul,
+.prose-medium ol {
+    margin-top: 1em;
+    margin-bottom: 1.8em;
+    padding-left: 1.5em;
+}
+
+.prose-medium ul {
+    list-style-type: disc;
+}
+
+.prose-medium ol {
+    list-style-type: decimal;
+}
+
+.prose-medium li {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    padding-left: 0.25em;
+}
+
+.prose-medium li > p {
+    margin-top: 0.75em;
+    margin-bottom: 0.75em;
+}
+
+.prose-medium code {
+    font-family: "Consolas", "Monaco", monospace;
+    font-size: 0.9em;
+    background: oklch(0.95 0.01 220);
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+}
+
+.dark .prose-medium code {
+    background: oklch(0.2 0.03 260);
+}
+
+.prose-medium pre {
+    margin-bottom: 2em;
+    padding: 1.5em;
+    background: oklch(0.97 0.01 220);
+    border-radius: 8px;
+    overflow-x: auto;
+}
+
+.dark .prose-medium pre {
+    background: oklch(0.15 0.03 260);
+}
+
+.prose-medium pre code {
+    background: transparent;
+    padding: 0;
+    font-size: 0.875em;
+    line-height: 1.7;
+}
+
+.prose-medium img {
+    margin-top: 2.5em;
+    margin-bottom: 2.5em;
+    border-radius: 4px;
+}
+
+.prose-medium hr {
+    margin-top: 3em;
+    margin-bottom: 3em;
+    border: none;
+    border-top: 1px solid oklch(0.9 0.01 220);
+}
+
+.dark .prose-medium hr {
+    border-top-color: oklch(0.25 0.03 260);
+}
+
+@media (min-width: 640px) {
+    .container-compact {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
     }
 }
 

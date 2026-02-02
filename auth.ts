@@ -7,16 +7,25 @@ import { prisma } from "@/lib/prisma";
 export const { handlers, auth, signIn, signOut } = NextAuth({
     adapter: PrismaAdapter(prisma),
     providers: [GitHub, Google],
+    session: {
+        strategy: "jwt",
+    },
     callbacks: {
-        session({ session, user }) {
-            // Add user id to session for convenience
-            session.user.id = user.id;
+        async jwt({ token, user }) {
+            if (user) {
+                token.id = user.id;
+            }
+            return token;
+        },
+        async session({ session, token }) {
+            if (token?.id) {
+                session.user.id = token.id as string;
+            }
             return session;
         },
     },
 });
 
-// Helper function to check if current user is admin
 export async function isAdmin() {
     const session = await auth();
     if (!session?.user?.email) return false;

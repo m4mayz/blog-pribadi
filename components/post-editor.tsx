@@ -9,8 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createPost, updatePost, deletePost } from "@/lib/actions";
-import { Loader2, Save, Trash2, Eye } from "lucide-react";
+import { Loader2, Save, Trash2, Eye, Upload } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { UploadButton } from "@uploadthing/react";
+import type { OurFileRouter } from "@/app/api/uploadthing/core";
+import { toast } from "sonner";
 
 interface PostData {
     id?: string;
@@ -18,6 +21,7 @@ interface PostData {
     slug: string;
     excerpt: string;
     content: string;
+    thumbnail: string;
     published: boolean;
 }
 
@@ -36,6 +40,7 @@ export function PostEditor({ initialData, isNew = false }: PostEditorProps) {
         slug: initialData?.slug || "",
         excerpt: initialData?.excerpt || "",
         content: initialData?.content || "",
+        thumbnail: initialData?.thumbnail || "",
         published: initialData?.published || false,
     });
 
@@ -180,6 +185,73 @@ export function PostEditor({ initialData, isNew = false }: PostEditorProps) {
                             placeholder="Brief summary of the post..."
                             rows={2}
                         />
+                    </div>
+
+                    {/* Thumbnail Upload */}
+                    <div className="space-y-2">
+                        <Label htmlFor="thumbnail">Thumbnail (required)</Label>
+                        <div className="flex flex-col gap-3">
+                            <div className="flex gap-2">
+                                <Input
+                                    id="thumbnail"
+                                    value={formData.thumbnail}
+                                    onChange={(e) =>
+                                        setFormData((prev) => ({
+                                            ...prev,
+                                            thumbnail: e.target.value,
+                                        }))
+                                    }
+                                    placeholder="https://images.unsplash.com/... or upload below"
+                                    type="url"
+                                    className="flex-1"
+                                />
+                                <UploadButton<OurFileRouter, "imageUploader">
+                                    endpoint="imageUploader"
+                                    onClientUploadComplete={(res) => {
+                                        if (res?.[0]?.url) {
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                thumbnail: res[0].url,
+                                            }));
+                                            toast.success(
+                                                "Image uploaded successfully!",
+                                            );
+                                        }
+                                    }}
+                                    onUploadError={(error: Error) => {
+                                        toast.error(
+                                            `Upload failed: ${error.message}`,
+                                        );
+                                    }}
+                                    appearance={{
+                                        button: "ut-ready:bg-primary ut-uploading:cursor-not-allowed ut-uploading:bg-primary/50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+                                        container: "flex-shrink-0",
+                                        allowedContent: "hidden",
+                                    }}
+                                    content={{
+                                        button({ ready }) {
+                                            if (ready)
+                                                return (
+                                                    <div className="flex items-center gap-2">
+                                                        <Upload className="h-4 w-4" />
+                                                        Upload
+                                                    </div>
+                                                );
+                                            return "Getting ready...";
+                                        },
+                                    }}
+                                />
+                            </div>
+                            {formData.thumbnail && (
+                                <div className="aspect-video rounded-lg overflow-hidden border">
+                                    <img
+                                        src={formData.thumbnail}
+                                        alt="Thumbnail preview"
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Content */}

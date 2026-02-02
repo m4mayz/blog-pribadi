@@ -32,7 +32,6 @@ export function AuthModal() {
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 <Button size="sm" className="group">
-                    <LogIn className="mr-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                     Sign In
                 </Button>
             </DialogTrigger>

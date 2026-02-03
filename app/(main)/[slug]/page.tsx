@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getPostBySlug, incrementPostViews, getAdminUser } from "@/lib/actions";
+import { getPostBySlug, incrementPostViews } from "@/lib/actions";
 import { PostPageClient } from "./post-page-client";
 
 interface PostPageProps {
@@ -50,14 +50,16 @@ export async function generateMetadata({
 export default async function PostPage({ params }: PostPageProps) {
     const { slug } = await params;
     const post = await getPostBySlug(slug);
-    const adminUser = await getAdminUser();
 
     if (!post || !post.published) {
         notFound();
     }
 
-    // Increment view count
-    await incrementPostViews(slug);
+    // Increment view count (non-blocking, silent fail)
+    // Don't await to prevent blocking page render
+    incrementPostViews(slug).catch((error) => {
+        console.error("View tracking failed:", error);
+    });
 
     const wordCount = post.content.split(/\s+/).length;
     const readingTime = Math.ceil(wordCount / 200);
@@ -74,7 +76,6 @@ export default async function PostPage({ params }: PostPageProps) {
                 })),
             }}
             readingTime={readingTime}
-            adminId={adminUser?.id}
         />
     );
 }

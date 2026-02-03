@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { createComment, deleteComment } from "@/lib/actions";
-import { Loader2, Trash2, MessageCircle } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface Comment {
@@ -122,7 +122,12 @@ export function CommentSection({ postId, comments }: CommentSectionProps) {
                 <Card>
                     <CardContent className="py-4 text-center text-muted-foreground">
                         <div className="flex items-center justify-center gap-1">
-                            Please <AuthModal /> to leave a comment.
+                            <AuthModal>
+                                <span className="underline cursor-pointer hover:text-primary font-medium">
+                                    Sign in
+                                </span>
+                            </AuthModal>
+                            <span>to leave a comment.</span>
                         </div>
                     </CardContent>
                 </Card>

@@ -9,8 +9,14 @@ export function AuthButton() {
 
     if (status === "loading") {
         return (
-            <Button disabled variant="ghost" size="sm">
-                <Loader2 className="h-4 w-4 animate-spin" />
+            <Button
+                disabled
+                variant="ghost"
+                size="sm"
+                aria-label="Loading authentication status"
+            >
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                <span className="sr-only">Loading...</span>
             </Button>
         );
     }
@@ -18,11 +24,19 @@ export function AuthButton() {
     if (session) {
         return (
             <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground hidden sm:inline">
+                <span
+                    className="text-sm text-muted-foreground hidden sm:inline"
+                    aria-label="Logged in as"
+                >
                     {session.user?.name || session.user?.email}
                 </span>
-                <Button variant="ghost" size="sm" onClick={() => signOut()}>
-                    <LogOut className="h-4 w-4 mr-2" />
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => signOut()}
+                    aria-label="Logout from account"
+                >
+                    <LogOut className="h-4 w-4 mr-2" aria-hidden="true" />
                     Logout
                 </Button>
             </div>
@@ -30,8 +44,13 @@ export function AuthButton() {
     }
 
     return (
-        <Button variant="default" size="sm" onClick={() => signIn()}>
-            <LogIn className="h-4 w-4 mr-2" />
+        <Button
+            variant="default"
+            size="sm"
+            onClick={() => signIn()}
+            aria-label="Login to your account"
+        >
+            <LogIn className="h-4 w-4 mr-2" aria-hidden="true" />
             Login
         </Button>
     );

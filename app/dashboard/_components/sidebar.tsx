@@ -9,6 +9,7 @@ import {
     ChevronLeft,
     ChevronRight,
     FileText,
+    Image,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 const navItems = [
     { href: "/dashboard", icon: LayoutDashboard, label: "Overview" },
     { href: "/dashboard/posts", icon: FileText, label: "Posts" },
+    { href: "/dashboard/media", icon: Image, label: "Media" },
     { href: "/dashboard/editor/new", icon: FileEdit, label: "New Post" },
 ];
 

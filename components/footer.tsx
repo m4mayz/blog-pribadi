@@ -3,7 +3,11 @@ import { Icon } from "@iconify/react";
 
 export function Footer() {
     return (
-        <footer className="border-t py-8 mt-20">
+        <footer
+            className="border-t py-8 mt-20"
+            role="contentinfo"
+            aria-label="Site footer"
+        >
             <div className="container-compact flex flex-col max-md:text-center md:flex-row items-center justify-between gap-4">
                 {/* Copyright */}
                 <p className="text-sm text-muted-foreground order-2 md:order-1">

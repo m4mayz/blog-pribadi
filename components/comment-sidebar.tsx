@@ -9,6 +9,7 @@ import { createComment, deleteComment } from "@/lib/actions";
 import { Loader2, Trash2, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import { AuthModal } from "@/components/auth-modal";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -20,7 +21,6 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
 
 interface Comment {
     id: string;
@@ -38,7 +38,6 @@ interface CommentSidebarProps {
     comments: Comment[];
     isOpen: boolean;
     onClose: () => void;
-    adminId?: string;
 }
 
 // ... (existing imports, but remove useState if confirm logic moves - actually useState is fine for optimistics)
@@ -48,10 +47,10 @@ export function CommentSidebar({
     comments,
     isOpen,
     onClose,
-    adminId,
 }: CommentSidebarProps) {
     const { data: session } = useSession();
     const [content, setContent] = useState("");
+    const [error, setError] = useState<string | null>(null);
     const [isPending, startTransition] = useTransition();
     const [optimisticComments, setOptimisticComments] = useState(comments);
 
@@ -61,7 +60,17 @@ export function CommentSidebar({
     }, [comments]);
 
     const handleSubmit = () => {
-        if (!content.trim()) return;
+        // Client-side validation
+        if (!content.trim()) {
+            setError("Comment cannot be empty");
+            return;
+        }
+        if (content.length > 5000) {
+            setError("Comment must be less than 5000 characters");
+            return;
+        }
+
+        setError(null);
 
         startTransition(async () => {
             try {
@@ -74,7 +83,12 @@ export function CommentSidebar({
                 toast.success("Comment posted!");
             } catch (error) {
                 console.error("Failed to post comment:", error);
-                toast.error("Failed to post comment");
+                const errorMessage =
+                    error instanceof Error
+                        ? error.message
+                        : "Failed to post comment";
+                setError(errorMessage);
+                toast.error(errorMessage);
             }
         });
     };
@@ -102,11 +116,15 @@ export function CommentSidebar({
                 <div
                     className="fixed inset-0 bg-black/25 z-100 transition-opacity"
                     onClick={onClose}
+                    aria-hidden="true"
                 />
             )}
 
             {/* Sidebar */}
-            <div
+            <aside
+                role="dialog"
+                aria-modal="true"
+                aria-label="Comments section"
                 className={`fixed top-0 right-0 h-full w-full max-w-sm bg-background shadow-2xl z-110 transform transition-transform duration-300 ease-in-out ${
                     isOpen ? "translate-x-0" : "translate-x-full"
                 }`}
@@ -114,7 +132,7 @@ export function CommentSidebar({
                 <div className="flex flex-col h-full">
                     {/* Header */}
                     <div className="flex items-center justify-between p-6 border-b">
-                        <h2 className="text-xl font-bold">
+                        <h2 id="comments-title" className="text-xl font-bold">
                             Comments ({optimisticComments.length})
                         </h2>
                         <Button
@@ -122,55 +140,111 @@ export function CommentSidebar({
                             size="icon"
                             onClick={onClose}
                             className="h-8 w-8"
+                            aria-label="Close comments"
                         >
-                            <X className="h-5 w-5" />
+                            <X className="h-5 w-5" aria-hidden="true" />
                         </Button>
                     </div>
 
                     {/* Comment Form */}
                     {session && (
                         <div className="p-6 border-b">
-                            <div className="flex items-start gap-3">
-                                <Avatar className="h-8 w-8">
-                                    <AvatarImage
-                                        src={session.user?.image || undefined}
-                                    />
-                                    <AvatarFallback>
-                                        {session.user?.name?.charAt(0) || "U"}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1 space-y-2">
-                                    <Textarea
-                                        value={content}
-                                        onChange={(e) =>
-                                            setContent(e.target.value)
-                                        }
-                                        placeholder="Write a comment..."
-                                        rows={3}
-                                        disabled={isPending}
-                                    />
-                                    <div className="flex justify-end">
-                                        <Button
-                                            onClick={handleSubmit}
-                                            disabled={
-                                                !content.trim() || isPending
+                            <form
+                                onSubmit={(e) => {
+                                    e.preventDefault();
+                                    handleSubmit();
+                                }}
+                                aria-label="Write a comment"
+                            >
+                                <div className="flex items-start gap-3">
+                                    <Avatar
+                                        className="h-8 w-8"
+                                        aria-label={`${session.user?.name || "User"}'s avatar`}
+                                    >
+                                        <AvatarImage
+                                            src={
+                                                session.user?.image || undefined
                                             }
-                                            size="sm"
-                                        >
-                                            {isPending && (
-                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            )}
-                                            Post Comment
-                                        </Button>
+                                            alt={`${session.user?.name || "User"}'s profile picture`}
+                                        />
+                                        <AvatarFallback>
+                                            {session.user?.name?.charAt(0) ||
+                                                "U"}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 space-y-2">
+                                        <Textarea
+                                            id="comment-input"
+                                            value={content}
+                                            onChange={(e) => {
+                                                setContent(e.target.value);
+                                                setError(null);
+                                            }}
+                                            placeholder="Write a comment..."
+                                            rows={3}
+                                            disabled={isPending}
+                                            aria-label="Comment text"
+                                            aria-describedby={
+                                                error
+                                                    ? "comment-error"
+                                                    : "comment-counter"
+                                            }
+                                            aria-invalid={
+                                                error ? "true" : "false"
+                                            }
+                                            className={
+                                                error
+                                                    ? "border-destructive"
+                                                    : ""
+                                            }
+                                        />
+                                        {error && (
+                                            <p
+                                                id="comment-error"
+                                                className="text-sm text-destructive"
+                                                role="alert"
+                                            >
+                                                {error}
+                                            </p>
+                                        )}
+                                        <div className="flex items-center justify-between">
+                                            <span
+                                                id="comment-counter"
+                                                className="text-xs text-muted-foreground"
+                                                aria-live="polite"
+                                            >
+                                                {content.length}/5000 characters
+                                            </span>
+                                            <Button
+                                                type="submit"
+                                                disabled={
+                                                    !content.trim() || isPending
+                                                }
+                                                size="sm"
+                                                aria-label="Post comment"
+                                            >
+                                                {isPending && (
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                )}
+                                                Post Comment
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            </form>
                         </div>
                     )}
 
                     {!session && (
                         <div className="p-6 border-b text-center text-muted-foreground">
-                            <p className="mb-4">Sign in to leave a comment</p>
+                            <p className="mb-4">
+                                <AuthModal>
+                                    <span className="underline cursor-pointer hover:text-primary font-medium">
+                                        Sign in
+                                    </span>
+                                </AuthModal>{" "}
+                                to leave a comment
+                            </p>
                         </div>
                     )}
 
@@ -207,16 +281,6 @@ export function CommentSidebar({
                                                         {comment.user.name ||
                                                             "Anonymous"}
                                                     </p>
-                                                    {adminId &&
-                                                        adminId ===
-                                                            comment.user.id && (
-                                                            <Badge
-                                                                variant="default"
-                                                                className="h-4 px-1 text-[10px]"
-                                                            >
-                                                                Author
-                                                            </Badge>
-                                                        )}
                                                     <span className="text-xs text-muted-foreground">
                                                         {formatDistanceToNow(
                                                             new Date(
@@ -280,7 +344,7 @@ export function CommentSidebar({
                         )}
                     </div>
                 </div>
-            </div>
+            </aside>
         </>
     );
 }

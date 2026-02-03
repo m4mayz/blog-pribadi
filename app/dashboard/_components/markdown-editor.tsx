@@ -21,6 +21,8 @@ import {
     EyeOff,
     Loader2,
     Check,
+    FolderOpen,
+    Upload,
 } from "lucide-react";
 import {
     DropdownMenu,
@@ -30,6 +32,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
+import { toast } from "sonner";
+import { MediaLibraryModal } from "@/components/media-library-modal";
 
 type ImageSize = "large" | "medium" | "small";
 
@@ -95,6 +99,7 @@ export function MarkdownEditor({
 }: MarkdownEditorProps) {
     const [showPreview, setShowPreview] = useState(false);
     const [selectedSize, setSelectedSize] = useState<ImageSize>("large");
+    const [showMediaLibrary, setShowMediaLibrary] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     const { startUpload, isUploading } = useUploadThing("imageUploader", {
@@ -105,7 +110,7 @@ export function MarkdownEditor({
         },
         onUploadError: (error) => {
             console.error("Upload error:", error);
-            alert("Upload failed: " + error.message);
+            toast.error("Upload failed: " + error.message);
         },
     });
 
@@ -239,61 +244,23 @@ export function MarkdownEditor({
                     ),
                 )}
 
-                {/* Image Upload with Size Selector */}
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <button
-                            type="button"
-                            disabled={isUploading}
-                            className={cn(
-                                "rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground flex items-center gap-1",
-                                isUploading && "opacity-50 cursor-not-allowed",
-                            )}
-                        >
-                            {isUploading ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                                <ImageIcon className="h-4 w-4" />
-                            )}
-                        </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start">
-                        <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
-                            Select Size
-                        </div>
-                        {(["large", "medium", "small"] as ImageSize[]).map(
-                            (size) => (
-                                <DropdownMenuItem
-                                    key={size}
-                                    onClick={() => {
-                                        setSelectedSize(size);
-                                        document
-                                            .getElementById("image-upload")
-                                            ?.click();
-                                    }}
-                                    className="flex items-center justify-between"
-                                >
-                                    <span className="capitalize">{size}</span>
-                                    <span className="text-xs text-muted-foreground">
-                                        {size === "large" && "100%"}
-                                        {size === "medium" && "66%"}
-                                        {size === "small" && "33%"}
-                                    </span>
-                                    {selectedSize === size && (
-                                        <Check className="h-3 w-3 ml-2" />
-                                    )}
-                                </DropdownMenuItem>
-                            ),
-                        )}
-                    </DropdownMenuContent>
-                </DropdownMenu>
-                <input
-                    id="image-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                />
+                {/* Image Insert Button */}
+                <button
+                    type="button"
+                    onClick={() => setShowMediaLibrary(true)}
+                    disabled={isUploading}
+                    title="Insert Image"
+                    className={cn(
+                        "rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+                        isUploading && "opacity-50 cursor-not-allowed",
+                    )}
+                >
+                    {isUploading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                        <ImageIcon className="h-4 w-4" />
+                    )}
+                </button>
 
                 {/* Preview Toggle */}
                 <div className="ml-auto">
@@ -366,6 +333,15 @@ export function MarkdownEditor({
                     />
                 )}
             </div>
+
+            {/* Media Library Modal */}
+            <MediaLibraryModal
+                open={showMediaLibrary}
+                onOpenChange={setShowMediaLibrary}
+                onSelect={(url) => insertImageMarkdown(url, selectedSize)}
+                selectedSize={selectedSize}
+                onSizeChange={setSelectedSize}
+            />
         </div>
     );
 }

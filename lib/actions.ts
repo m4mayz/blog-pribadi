@@ -3,20 +3,17 @@
 import { prisma } from "@/lib/prisma";
 import { auth, isAdmin } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { retryOperation, withTimeout } from "@/lib/async-utils";
+import { commentSchema } from "@/lib/validations";
+import {
+    checkRateLimit,
+    RateLimits,
+    formatTimeRemaining,
+} from "@/lib/rate-limit";
 
 // ========================================
 // Post Actions (Admin Only)
 // ========================================
-
-// ... imports
-
-export async function getAdminUser() {
-    const adminEmail = process.env.ADMIN_EMAIL;
-    if (!adminEmail) return null;
-    return prisma.user.findUnique({
-        where: { email: adminEmail },
-    });
-}
 
 export async function createPost(data: {
     title: string;
@@ -28,6 +25,18 @@ export async function createPost(data: {
 }) {
     if (!(await isAdmin())) {
         throw new Error("Unauthorized");
+    }
+
+    // Rate limit check
+    const session = await auth();
+    const rateLimitResult = checkRateLimit(
+        `post-create:${session?.user?.id}`,
+        RateLimits.POST_MUTATION,
+    );
+    if (!rateLimitResult.success) {
+        throw new Error(
+            `Rate limit exceeded. Please try again in ${formatTimeRemaining(rateLimitResult.resetTime)}`,
+        );
     }
 
     const post = await prisma.post.create({
@@ -61,6 +70,18 @@ export async function updatePost(
         throw new Error("Unauthorized");
     }
 
+    // Rate limit check
+    const session = await auth();
+    const rateLimitResult = checkRateLimit(
+        `post-update:${session?.user?.id}`,
+        RateLimits.POST_MUTATION,
+    );
+    if (!rateLimitResult.success) {
+        throw new Error(
+            `Rate limit exceeded. Please try again in ${formatTimeRemaining(rateLimitResult.resetTime)}`,
+        );
+    }
+
     const post = await prisma.post.update({
         where: { id },
         data,
@@ -75,6 +96,18 @@ export async function updatePost(
 export async function deletePost(id: string) {
     if (!(await isAdmin())) {
         throw new Error("Unauthorized");
+    }
+
+    // Rate limit check
+    const session = await auth();
+    const rateLimitResult = checkRateLimit(
+        `post-delete:${session?.user?.id}`,
+        RateLimits.POST_MUTATION,
+    );
+    if (!rateLimitResult.success) {
+        throw new Error(
+            `Rate limit exceeded. Please try again in ${formatTimeRemaining(rateLimitResult.resetTime)}`,
+        );
     }
 
     await prisma.post.delete({
@@ -95,10 +128,28 @@ export async function createComment(postId: string, content: string) {
         throw new Error("You must be logged in to comment");
     }
 
+    // Rate limit check
+    const rateLimitResult = checkRateLimit(
+        `comment-create:${session.user.id}`,
+        RateLimits.COMMENT_CREATE,
+    );
+    if (!rateLimitResult.success) {
+        throw new Error(
+            `Too many comments. Please try again in ${formatTimeRemaining(rateLimitResult.resetTime)}`,
+        );
+    }
+
+    // Validate input with Zod
+    const validation = commentSchema.safeParse({ content, postId });
+    if (!validation.success) {
+        const errors = validation.error.errors.map((e) => e.message).join(", ");
+        throw new Error(errors);
+    }
+
     const comment = await prisma.comment.create({
         data: {
-            content,
-            postId,
+            content: validation.data.content,
+            postId: validation.data.postId,
             userId: session.user.id,
         },
         include: {
@@ -116,6 +167,17 @@ export async function deleteComment(commentId: string) {
     const session = await auth();
     if (!session?.user?.id) {
         throw new Error("Unauthorized");
+    }
+
+    // Rate limit check
+    const rateLimitResult = checkRateLimit(
+        `comment-delete:${session.user.id}`,
+        RateLimits.COMMENT_DELETE,
+    );
+    if (!rateLimitResult.success) {
+        throw new Error(
+            `Too many deletions. Please try again in ${formatTimeRemaining(rateLimitResult.resetTime)}`,
+        );
     }
 
     const comment = await prisma.comment.findUnique({
@@ -141,18 +203,42 @@ export async function deleteComment(commentId: string) {
 
 // Increment post view counter
 export async function incrementPostViews(slug: string) {
-    await prisma.post.update({
-        where: { slug },
-        data: {
-            views: {
-                increment: 1,
+    try {
+        // Use retry logic with timeout to handle race conditions and transient failures
+        await retryOperation(
+            () =>
+                withTimeout(
+                    () =>
+                        prisma.post.update({
+                            where: { slug },
+                            data: {
+                                views: {
+                                    increment: 1,
+                                },
+                            },
+                        }),
+                    3000, // 3 second timeout
+                ),
+            {
+                maxRetries: 2, // Retry once if fails
+                delayMs: 500, // 500ms delay between retries
+                backoff: false, // No exponential backoff for view count
             },
-        },
-    });
+        );
+    } catch (error) {
+        // Silent fail - view count is not critical
+        // Log for monitoring but don't throw error
+        console.error("Failed to increment post views:", error);
+    }
 }
 
-// Toggle post like (anonymous - no auth required)
+// Toggle post like
 export async function togglePostLike(postId: string, increment: boolean) {
+    const session = await auth();
+    if (!session) {
+        throw new Error("Unauthorized");
+    }
+
     await prisma.post.update({
         where: { id: postId },
         data: {

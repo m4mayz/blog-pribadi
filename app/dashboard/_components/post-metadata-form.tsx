@@ -8,17 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
     Image as ImageIcon,
-    Upload,
     Link2,
     Type,
     FileText,
-    Loader2,
-    Check,
-    AlertCircle,
     Trash2,
+    FolderOpen,
+    Check,
 } from "lucide-react";
 import { useUploadThing } from "@/lib/uploadthing";
 import { cn } from "@/lib/utils";
+import { MediaLibraryModal } from "@/components/media-library-modal";
 
 interface PostMetadataFormProps {
     slug: string;
@@ -44,67 +43,19 @@ export function PostMetadataForm({
     >("idle");
     const [thumbnailPreview, setThumbnailPreview] = useState(thumbnail);
     const [uploadedFileKey, setUploadedFileKey] = useState<string | null>(null);
-    const [isDeleting, setIsDeleting] = useState(false);
-
-    const { startUpload, isUploading } = useUploadThing("imageUploader", {
-        onClientUploadComplete: (res) => {
-            if (res?.[0]) {
-                onThumbnailChange(res[0].url);
-                setThumbnailPreview(res[0].url);
-                setUploadedFileKey(res[0].key);
-                setUploadStatus("success");
-                setTimeout(() => setUploadStatus("idle"), 2000);
-            }
-        },
-        onUploadError: (error) => {
-            setUploadStatus("error");
-            console.error("Upload error:", error);
-            setTimeout(() => setUploadStatus("idle"), 3000);
-        },
-    });
+    const [showMediaLibrary, setShowMediaLibrary] = useState(false);
 
     const handleUrlInput = (url: string) => {
         onThumbnailChange(url);
         setThumbnailPreview(url);
     };
 
-    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files?.length) return;
-
-        setUploadStatus("uploading");
-        await startUpload(Array.from(files));
-        e.target.value = "";
-    };
-
-    const handleDeleteImage = async () => {
-        setIsDeleting(true);
-        try {
-            // If there's an uploaded file key, delete from uploadthing
-            if (uploadedFileKey) {
-                const response = await fetch("/api/uploadthing/delete", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        fileKeys: [uploadedFileKey],
-                    }),
-                });
-
-                if (!response.ok) {
-                    console.error("Failed to delete from uploadthing");
-                }
-            }
-
-            // Clear all thumbnail data
-            onThumbnailChange("");
-            setThumbnailPreview("");
-            setUploadedFileKey(null);
-            setUploadStatus("idle");
-        } catch (error) {
-            console.error("Error deleting image:", error);
-        } finally {
-            setIsDeleting(false);
-        }
+    const handleDeleteImage = () => {
+        // Reset featured image to empty state
+        onThumbnailChange("");
+        setThumbnailPreview("");
+        setUploadedFileKey(null);
+        setUploadStatus("idle");
     };
 
     return (
@@ -147,14 +98,9 @@ export function PostMetadataForm({
                                     size="icon"
                                     className="h-7 w-7 shadow-lg"
                                     onClick={handleDeleteImage}
-                                    disabled={isDeleting}
-                                    title="Delete image"
+                                    title="Remove featured image"
                                 >
-                                    {isDeleting ? (
-                                        <Loader2 className="h-3 w-3 animate-spin" />
-                                    ) : (
-                                        <Trash2 className="h-3 w-3" />
-                                    )}
+                                    <Trash2 className="h-3 w-3" />
                                 </Button>
                             </div>
                         </div>
@@ -179,57 +125,34 @@ export function PostMetadataForm({
                         />
                     </div>
 
-                    {/* Upload Button */}
+                    {/* Media Library Button */}
                     <div className="relative">
                         <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                            <Upload className="h-3 w-3" />
-                            Or upload from your device
+                            <FolderOpen className="h-3 w-3" />
+                            Select from media library or paste URL above
                         </div>
-                        <input
-                            id="thumbnail-upload"
-                            type="file"
-                            accept="image/*"
-                            onChange={handleFileSelect}
-                            className="hidden"
-                        />
                         <Button
                             type="button"
                             variant="outline"
+                            onClick={() => setShowMediaLibrary(true)}
                             className="w-full"
-                            disabled={
-                                isUploading || uploadStatus === "uploading"
-                            }
-                            onClick={() =>
-                                document
-                                    .getElementById("thumbnail-upload")
-                                    ?.click()
-                            }
                         >
-                            {isUploading || uploadStatus === "uploading" ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Uploading...
-                                </>
-                            ) : uploadStatus === "success" ? (
-                                <>
-                                    <Check className="mr-2 h-4 w-4" />
-                                    Uploaded!
-                                </>
-                            ) : uploadStatus === "error" ? (
-                                <>
-                                    <AlertCircle className="mr-2 h-4 w-4" />
-                                    Upload failed
-                                </>
-                            ) : (
-                                <>
-                                    <Upload className="mr-2 h-4 w-4" />
-                                    Choose file
-                                </>
-                            )}
+                            <FolderOpen className="mr-2 h-4 w-4" />
+                            Browse Media Library
                         </Button>
                     </div>
                 </div>
             </Card>
+
+            {/* Media Library Modal */}
+            <MediaLibraryModal
+                open={showMediaLibrary}
+                onOpenChange={setShowMediaLibrary}
+                onSelect={(url) => {
+                    handleUrlInput(url);
+                    setShowMediaLibrary(false);
+                }}
+            />
 
             {/* Slug Section */}
             <Card className="px-6">

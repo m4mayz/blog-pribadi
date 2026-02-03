@@ -32,14 +32,9 @@ interface PostPageClientProps {
         comments: Comment[];
     };
     readingTime: number;
-    adminId?: string;
 }
 
-export function PostPageClient({
-    post,
-    readingTime,
-    adminId,
-}: PostPageClientProps) {
+export function PostPageClient({ post, readingTime }: PostPageClientProps) {
     const [isCommentOpen, setIsCommentOpen] = useState(false);
 
     return (
@@ -71,6 +66,7 @@ export function PostPageClient({
                                     dateTime={new Date(
                                         post.createdAt,
                                     ).toISOString()}
+                                    aria-label={`Published ${formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}`}
                                 >
                                     {formatDistanceToNow(
                                         new Date(post.createdAt),
@@ -79,11 +75,19 @@ export function PostPageClient({
                                         },
                                     )}
                                 </time>
-                                <span>•</span>
-                                <span>{readingTime} min read</span>
-                                <span>•</span>
-                                <span className="flex items-center gap-1">
-                                    <Eye className="h-4 w-4" />
+                                <span aria-hidden="true">•</span>
+                                <span aria-label={`${readingTime} minute read`}>
+                                    {readingTime} min read
+                                </span>
+                                <span aria-hidden="true">•</span>
+                                <span
+                                    className="flex items-center gap-1"
+                                    aria-label={`${post.views + 1} views`}
+                                >
+                                    <Eye
+                                        className="h-4 w-4"
+                                        aria-hidden="true"
+                                    />
                                     {post.views + 1}
                                 </span>
                             </div>
@@ -94,6 +98,7 @@ export function PostPageClient({
                                 initialLikes={post.likes}
                                 commentsCount={post.comments.length}
                                 onCommentClick={() => setIsCommentOpen(true)}
+                                onCommentClose={() => setIsCommentOpen(false)}
                             />
                         </div>
                     </header>
@@ -126,7 +131,6 @@ export function PostPageClient({
                 }))}
                 isOpen={isCommentOpen}
                 onClose={() => setIsCommentOpen(false)}
-                adminId={adminId}
             />
         </>
     );

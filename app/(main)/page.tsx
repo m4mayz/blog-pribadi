@@ -1,9 +1,23 @@
 import { PostGrid } from "@/components/post-grid";
 import { getPosts } from "@/lib/actions";
+import { Suspense } from "react";
+import { PostGridSkeleton } from "@/components/skeletons/post-skeletons";
 
-export default async function HomePage() {
+async function PostsSection() {
     const posts = await getPosts(); // Only published posts
 
+    if (posts.length === 0) {
+        return (
+            <div className="text-center py-20 text-muted-foreground">
+                <p>No posts yet. Check back soon!</p>
+            </div>
+        );
+    }
+
+    return <PostGrid posts={posts} />;
+}
+
+export default function HomePage() {
     return (
         <div className="min-h-screen pt-32 pb-20">
             {/* Hero Section */}
@@ -19,15 +33,11 @@ export default async function HomePage() {
                 </div>
             </section>
 
-            {/* Posts Grid */}
+            {/* Posts Grid with Suspense */}
             <section className="container">
-                {posts.length === 0 ? (
-                    <div className="text-center py-20 text-muted-foreground">
-                        <p>No posts yet. Check back soon!</p>
-                    </div>
-                ) : (
-                    <PostGrid posts={posts} />
-                )}
+                <Suspense fallback={<PostGridSkeleton count={6} />}>
+                    <PostsSection />
+                </Suspense>
             </section>
         </div>
     );

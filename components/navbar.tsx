@@ -34,6 +34,8 @@ export function Navbar() {
 
     return (
         <header
+            role="banner"
+            aria-label="Site header"
             className={`
                 fixed top-0 left-0 right-0 z-50
                 transition-all duration-300 ease-in-out
@@ -48,11 +50,12 @@ export function Navbar() {
                 transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
             }}
         >
-            <nav className="container-compact">
+            <nav className="container-compact" aria-label="Main navigation">
                 <div className="h-16 flex items-center justify-between">
                     {/* Logo with hover effect */}
                     <Link
                         href="/"
+                        aria-label="Amayy's Blog - Home"
                         className="font-heading text-xl font-bold tracking-tight hover:text-primary transition-all duration-200 relative group"
                     >
                         <span className="relative z-10">Amayy&#39;s Blog</span>

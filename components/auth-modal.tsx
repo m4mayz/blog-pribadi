@@ -7,16 +7,38 @@ import { Button } from "@/components/ui/button";
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
-    DialogHeader,
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import { Loader2, LogIn } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
-export function AuthModal() {
-    const [isOpen, setIsOpen] = useState(false);
+interface AuthModalProps {
+    children?: React.ReactNode;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+    onOpen?: () => void;
+}
+
+export function AuthModal({
+    children,
+    open,
+    onOpenChange,
+    onOpen,
+}: AuthModalProps) {
+    const [internalOpen, setInternalOpen] = useState(false);
     const [loading, setLoading] = useState<"google" | "github" | null>(null);
+
+    const isOpen = open !== undefined ? open : internalOpen;
+    const handleOpenChange = (newOpen: boolean) => {
+        if (newOpen && onOpen) {
+            onOpen();
+        }
+        if (onOpenChange) {
+            onOpenChange(newOpen);
+        } else {
+            setInternalOpen(newOpen);
+        }
+    };
 
     const handleLogin = async (provider: "google" | "github") => {
         setLoading(provider);
@@ -29,77 +51,58 @@ export function AuthModal() {
     };
 
     return (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-                <Button size="sm" className="group">
-                    Sign In
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-                <DialogHeader className="space-y-3">
-                    <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-                        <LogIn className="h-6 w-6 text-primary" />
-                    </div>
-                    <DialogTitle className="text-center text-2xl font-bold tracking-tight">
-                        Welcome Back
-                    </DialogTitle>
-                    <DialogDescription className="text-center text-base">
-                        Sign in to access your dashboard and manage your content
-                    </DialogDescription>
-                </DialogHeader>
+        <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+            {children ? (
+                <DialogTrigger asChild>{children}</DialogTrigger>
+            ) : open === undefined ? (
+                <DialogTrigger asChild>
+                    <Button size="sm">Sign In</Button>
+                </DialogTrigger>
+            ) : null}
+            <DialogContent className="sm:max-w-85 p-6" showCloseButton={false}>
+                <DialogTitle className="sr-only">Sign In</DialogTitle>
 
-                <div className="flex flex-col gap-3 py-6">
+                <div className="flex flex-col gap-3">
                     <Button
                         variant="outline"
                         size="lg"
-                        className="w-full h-12 relative group hover:border-primary/50 transition-all"
+                        className="w-full justify-center gap-3 cursor-pointer relative"
                         onClick={() => handleLogin("google")}
                         disabled={!!loading}
                     >
                         {loading === "google" ? (
-                            <>
-                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                Signing in...
-                            </>
+                            <Loader2 className="h-5 w-5 animate-spin absolute left-4" />
                         ) : (
-                            <>
-                                <Icon
-                                    icon="flat-color-icons:google"
-                                    className="mr-2 h-5 w-5"
-                                />
-                                Continue with Google
-                            </>
+                            <Icon
+                                icon="flat-color-icons:google"
+                                className="h-5 w-5 absolute left-4"
+                            />
                         )}
+                        <span>Continue with Google</span>
                     </Button>
 
                     <Button
                         variant="outline"
                         size="lg"
-                        className="w-full h-12 relative group hover:border-primary/50 transition-all"
+                        className="w-full justify-center gap-3 cursor-pointer relative"
                         onClick={() => handleLogin("github")}
                         disabled={!!loading}
                     >
                         {loading === "github" ? (
-                            <>
-                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                Signing in...
-                            </>
+                            <Loader2 className="h-5 w-5 animate-spin absolute left-4" />
                         ) : (
-                            <>
-                                <Icon
-                                    icon="mdi:github"
-                                    className="mr-2 h-5 w-5"
-                                />
-                                Continue with GitHub
-                            </>
+                            <Icon
+                                icon="mdi:github"
+                                className="h-5 w-5 absolute left-4"
+                            />
                         )}
+                        <span>Continue with GitHub</span>
                     </Button>
                 </div>
 
-                <div className="text-center text-xs text-muted-foreground pt-4 border-t">
-                    By continuing, you agree to our Terms of Service and Privacy
-                    Policy
-                </div>
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                    Your login data is secure and protected
+                </p>
             </DialogContent>
         </Dialog>
     );

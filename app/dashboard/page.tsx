@@ -15,6 +15,11 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Suspense } from "react";
+import {
+    DashboardStatsSkeleton,
+    DashboardRecentPostsSkeleton,
+} from "@/components/skeletons/dashboard-skeletons";
 
 // Bento Card Component
 function BentoCard({
@@ -81,12 +86,117 @@ function StatCard({
     );
 }
 
-export default async function DashboardPage() {
+// Async components for Suspense streaming
+async function DashboardStats() {
     const posts = await getPosts(true);
     const published = posts.filter((p) => p.published).length;
     const drafts = posts.filter((p) => !p.published).length;
+
+    return (
+        <>
+            <StatCard
+                label="Total Posts"
+                value={posts.length}
+                icon={FileText}
+                className="lg:col-span-1"
+            />
+            <StatCard
+                label="Published"
+                value={published}
+                icon={Eye}
+                trend="+2 this week"
+                className="lg:col-span-1"
+            />
+            <StatCard
+                label="Drafts"
+                value={drafts}
+                icon={Edit}
+                className="lg:col-span-1"
+            />
+            <StatCard
+                label="Avg. Read Time"
+                value="4 min"
+                icon={Clock}
+                className="lg:col-span-1"
+            />
+        </>
+    );
+}
+
+async function RecentPostsCard() {
+    const posts = await getPosts(true);
     const recentPosts = posts.slice(0, 4);
 
+    return (
+        <BentoCard className="md:col-span-2 lg:col-span-3 lg:row-span-2">
+            <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold">Recent Posts</h2>
+                <Link
+                    href="/dashboard/posts"
+                    className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                    View all <ArrowRight className="h-3 w-3" />
+                </Link>
+            </div>
+
+            {recentPosts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="rounded-full bg-muted p-4 mb-4">
+                        <FileText className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="font-semibold mb-1">No posts yet</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                        Start creating content for your readers.
+                    </p>
+                    <Button asChild size="sm">
+                        <Link href="/dashboard/editor/new">
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create Post
+                        </Link>
+                    </Button>
+                </div>
+            ) : (
+                <div className="space-y-1">
+                    {recentPosts.map((post) => (
+                        <Link
+                            key={post.id}
+                            href={`/dashboard/editor/${post.id}`}
+                            className="flex items-center justify-between p-3 -mx-3 rounded-lg hover:bg-muted/50 transition-colors"
+                        >
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                    <h3 className="font-medium truncate">
+                                        {post.title}
+                                    </h3>
+                                    <Badge
+                                        variant={
+                                            post.published
+                                                ? "default"
+                                                : "secondary"
+                                        }
+                                        className="shrink-0 text-xs"
+                                    >
+                                        {post.published ? "Published" : "Draft"}
+                                    </Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground truncate mt-0.5">
+                                    {post.excerpt || "No excerpt"}
+                                </p>
+                            </div>
+                            <time className="text-xs text-muted-foreground shrink-0 ml-4">
+                                {formatDistanceToNow(new Date(post.createdAt), {
+                                    addSuffix: true,
+                                })}
+                            </time>
+                        </Link>
+                    ))}
+                </div>
+            )}
+        </BentoCard>
+    );
+}
+
+export default function DashboardPage() {
     return (
         <div className="p-6 md:p-8 lg:p-10">
             {/* Header */}
@@ -109,102 +219,15 @@ export default async function DashboardPage() {
 
             {/* Bento Grid */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {/* Stats Row */}
-                <StatCard
-                    label="Total Posts"
-                    value={posts.length}
-                    icon={FileText}
-                    className="lg:col-span-1"
-                />
-                <StatCard
-                    label="Published"
-                    value={published}
-                    icon={Eye}
-                    trend="+2 this week"
-                    className="lg:col-span-1"
-                />
-                <StatCard
-                    label="Drafts"
-                    value={drafts}
-                    icon={Edit}
-                    className="lg:col-span-1"
-                />
-                <StatCard
-                    label="Avg. Read Time"
-                    value="4 min"
-                    icon={Clock}
-                    className="lg:col-span-1"
-                />
+                {/* Stats Row with Suspense */}
+                <Suspense fallback={<DashboardStatsSkeleton />}>
+                    <DashboardStats />
+                </Suspense>
 
-                {/* Recent Posts - Large Card */}
-                <BentoCard className="md:col-span-2 lg:col-span-3 lg:row-span-2">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-semibold">Recent Posts</h2>
-                        <Link
-                            href="/dashboard/posts"
-                            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                            View all <ArrowRight className="h-3 w-3" />
-                        </Link>
-                    </div>
-
-                    {recentPosts.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-12 text-center">
-                            <div className="rounded-full bg-muted p-4 mb-4">
-                                <FileText className="h-8 w-8 text-muted-foreground" />
-                            </div>
-                            <h3 className="font-semibold mb-1">No posts yet</h3>
-                            <p className="text-sm text-muted-foreground mb-4">
-                                Start creating content for your readers.
-                            </p>
-                            <Button asChild size="sm">
-                                <Link href="/dashboard/editor/new">
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Create Post
-                                </Link>
-                            </Button>
-                        </div>
-                    ) : (
-                        <div className="space-y-1">
-                            {recentPosts.map((post) => (
-                                <Link
-                                    key={post.id}
-                                    href={`/dashboard/editor/${post.id}`}
-                                    className="flex items-center justify-between p-3 -mx-3 rounded-lg hover:bg-muted/50 transition-colors"
-                                >
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2">
-                                            <h3 className="font-medium truncate">
-                                                {post.title}
-                                            </h3>
-                                            <Badge
-                                                variant={
-                                                    post.published
-                                                        ? "default"
-                                                        : "secondary"
-                                                }
-                                                className="shrink-0 text-xs"
-                                            >
-                                                {post.published
-                                                    ? "Published"
-                                                    : "Draft"}
-                                            </Badge>
-                                        </div>
-                                        <p className="text-sm text-muted-foreground truncate mt-0.5">
-                                            {post.excerpt || "No excerpt"}
-                                        </p>
-                                    </div>
-                                    <time className="text-xs text-muted-foreground shrink-0 ml-4">
-                                        {formatDistanceToNow(
-                                            new Date(post.createdAt),
-                                            { addSuffix: true },
-                                        )}
-                                    </time>
-                                </Link>
-                            ))}
-                        </div>
-                    )}
-                </BentoCard>
+                {/* Recent Posts with Suspense */}
+                <Suspense fallback={<DashboardRecentPostsSkeleton />}>
+                    <RecentPostsCard />
+                </Suspense>
 
                 {/* Quick Actions Card */}
                 <BentoCard className="md:col-span-2 lg:col-span-1 lg:row-span-2">

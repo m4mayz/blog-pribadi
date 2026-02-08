@@ -11,6 +11,7 @@ import { createPost } from "@/lib/actions";
 import { ArrowLeft, Save, Loader2, Settings2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 function generateSlug(title: string): string {
     return title
@@ -131,7 +132,7 @@ export default function NewPostPage() {
             <div className="flex-1 overflow-hidden flex">
                 {/* Editor */}
                 <div className="flex-1 overflow-hidden p-6">
-                    <div className="mx-auto max-w-4xl h-full">
+                    <div className="h-full">
                         <MarkdownEditor
                             title={title}
                             content={content}
@@ -142,29 +143,34 @@ export default function NewPostPage() {
                 </div>
 
                 {/* Metadata Sidebar */}
-                {showMetadata && (
-                    <div className="w-96 border-l border-border overflow-y-auto bg-background">
-                        <div className="p-6">
-                            <div className="mb-6">
-                                <h2 className="text-lg font-semibold mb-1">
-                                    Post Details
-                                </h2>
-                                <p className="text-sm text-muted-foreground">
-                                    Configure metadata and appearance
-                                </p>
-                            </div>
-                            <PostMetadataForm
-                                slug={slug}
-                                excerpt={excerpt}
-                                thumbnail={thumbnail}
-                                onSlugChange={setSlug}
-                                onExcerptChange={setExcerpt}
-                                onThumbnailChange={setThumbnail}
-                                canEditSlug={false}
-                            />
+                <div
+                    className={cn(
+                        "w-98 border-l border-border overflow-y-auto bg-background transition-all duration-300 ease-in-out",
+                        showMetadata
+                            ? "translate-x-0 opacity-100"
+                            : "translate-x-full opacity-0 w-0 border-l-0",
+                    )}
+                >
+                    <div className="p-6 w-96">
+                        <div className="mb-6">
+                            <h2 className="text-lg font-semibold mb-1">
+                                Post Details
+                            </h2>
+                            <p className="text-sm text-muted-foreground">
+                                Configure metadata and appearance
+                            </p>
                         </div>
+                        <PostMetadataForm
+                            slug={slug}
+                            excerpt={excerpt}
+                            thumbnail={thumbnail}
+                            onSlugChange={setSlug}
+                            onExcerptChange={setExcerpt}
+                            onThumbnailChange={setThumbnail}
+                            canEditSlug={false}
+                        />
                     </div>
-                )}
+                </div>
             </div>
         </div>
     );

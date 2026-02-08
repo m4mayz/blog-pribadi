@@ -118,6 +118,39 @@ export async function deletePost(id: string) {
     revalidatePath("/dashboard");
 }
 
+export async function bulkDeletePosts(postIds: string[]) {
+    if (!(await isAdmin())) {
+        throw new Error("Unauthorized");
+    }
+
+    if (!postIds || postIds.length === 0) {
+        throw new Error("No posts selected");
+    }
+
+    // Rate limit check
+    const session = await auth();
+    const rateLimitResult = checkRateLimit(
+        `post-bulk-delete:${session?.user?.id}`,
+        RateLimits.POST_MUTATION,
+    );
+    if (!rateLimitResult.success) {
+        throw new Error(
+            `Rate limit exceeded. Please try again in ${formatTimeRemaining(rateLimitResult.resetTime)}`,
+        );
+    }
+
+    await prisma.post.deleteMany({
+        where: {
+            id: { in: postIds },
+        },
+    });
+
+    revalidatePath("/");
+    revalidatePath("/dashboard");
+
+    return { count: postIds.length };
+}
+
 // ========================================
 // Comment Actions (Authenticated Users)
 // ========================================

@@ -3,10 +3,27 @@
 import { useState } from "react";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { CommentSidebar } from "@/components/comment-sidebar";
 import { PostActions } from "@/components/post-actions";
 import { Eye } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+
+// Helper function to extract YouTube video ID from various URL formats
+function extractYouTubeId(url: string): string | null {
+    const patterns = [
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/,
+        /youtube\.com\/embed\/([^?\s]+)/,
+    ];
+    for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match) return match[1];
+    }
+    return null;
+}
 
 interface Comment {
     id: string;
@@ -117,7 +134,132 @@ export function PostPageClient({ post, readingTime }: PostPageClientProps) {
 
                     {/* Content - Medium.com inspired styling */}
                     <div className="prose-medium">
-                        <ReactMarkdown>{post.content}</ReactMarkdown>
+                        <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            rehypePlugins={[rehypeRaw]}
+                            components={{
+                                // Override paragraph to handle images without nesting issues
+                                p: ({ node, children, ...props }) => {
+                                    // Check if paragraph only contains an image by checking AST node
+                                    const hasOnlyImage =
+                                        node?.children?.length === 1 &&
+                                        node.children[0].type === "element" &&
+                                        node.children[0].tagName === "img";
+
+                                    // Check if paragraph only contains a link (could be YouTube embed)
+                                    const hasOnlyLink =
+                                        node?.children?.length === 1 &&
+                                        node.children[0].type === "element" &&
+                                        node.children[0].tagName === "a";
+
+                                    // If it's just an image or a standalone link, return children without p wrapper
+                                    // This prevents <p> from containing block-level elements like <div>
+                                    if (hasOnlyImage || hasOnlyLink) {
+                                        return <>{children}</>;
+                                    }
+
+                                    return <p {...props}>{children}</p>;
+                                },
+                                // Center-align images with size support
+                                img: ({ alt, src }) => {
+                                    const [altText, size] = (alt || "").split(
+                                        "|",
+                                    );
+                                    const sizeClass =
+                                        {
+                                            large: "w-full max-w-3xl",
+                                            medium: "w-2/3 max-w-[507px]",
+                                            small: "w-1/3 max-w-[254px]",
+                                        }[
+                                            size as "large" | "medium" | "small"
+                                        ] || "w-full max-w-3xl";
+
+                                    return (
+                                        <div className="flex justify-center my-6">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={src}
+                                                alt={altText}
+                                                className={`${sizeClass} rounded-lg h-auto`}
+                                            />
+                                        </div>
+                                    );
+                                },
+                                // YouTube embed detection via links
+                                a: ({ href, children }) => {
+                                    if (!href) {
+                                        return <a>{children}</a>;
+                                    }
+
+                                    const videoId = extractYouTubeId(href);
+                                    if (videoId) {
+                                        return (
+                                            <div className="flex justify-center my-8">
+                                                <div className="w-full max-w-3xl aspect-video">
+                                                    <iframe
+                                                        src={`https://www.youtube.com/embed/${videoId}`}
+                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                        allowFullScreen
+                                                        className="w-full h-full rounded-lg"
+                                                    />
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+
+                                    return (
+                                        <a
+                                            href={href}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-primary hover:underline"
+                                        >
+                                            {children}
+                                        </a>
+                                    );
+                                },
+                                // Center-align tables
+                                table: ({ children }) => (
+                                    <div className="flex justify-center my-6">
+                                        <table className="border-collapse">
+                                            {children}
+                                        </table>
+                                    </div>
+                                ),
+                                // Syntax highlighting for code blocks
+                                code: ({ className, children, ...props }) => {
+                                    const match = /language-(\w+)/.exec(
+                                        className || "",
+                                    );
+                                    const isInline = !match;
+
+                                    return isInline ? (
+                                        <code
+                                            className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono"
+                                            {...props}
+                                        >
+                                            {children}
+                                        </code>
+                                    ) : (
+                                        <div className="my-6">
+                                            <SyntaxHighlighter
+                                                style={oneDark as any}
+                                                language={match[1]}
+                                                PreTag="div"
+                                                className="rounded-lg"
+                                            >
+                                                {String(children).replace(
+                                                    /\n$/,
+                                                    "",
+                                                )}
+                                            </SyntaxHighlighter>
+                                        </div>
+                                    );
+                                },
+                            }}
+                        >
+                            {post.content}
+                        </ReactMarkdown>
                     </div>
                 </article>
             </div>

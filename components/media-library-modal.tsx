@@ -8,13 +8,6 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { MediaLibraryContent } from "@/components/media-library-content";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 
 type ImageSize = "large" | "medium" | "small";
 

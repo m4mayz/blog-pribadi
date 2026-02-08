@@ -181,10 +181,10 @@ export function MediaLibraryContent({
                             onSizeChange(value as ImageSize)
                         }
                     >
-                        <SelectTrigger className="w-[140px]">
+                        <SelectTrigger className="w-35">
                             <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="z-[150]">
+                        <SelectContent className="z-150">
                             <SelectItem value="large">Large (100%)</SelectItem>
                             <SelectItem value="medium">Medium (66%)</SelectItem>
                             <SelectItem value="small">Small (33%)</SelectItem>
@@ -322,7 +322,7 @@ export function MediaLibraryContent({
                                 </div>
 
                                 {/* File info */}
-                                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                                <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/80 to-transparent p-2">
                                     <p className="text-xs text-white truncate">
                                         {file.name}
                                     </p>

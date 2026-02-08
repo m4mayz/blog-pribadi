@@ -61,7 +61,7 @@ export function PostPageClient({ post, readingTime }: PostPageClientProps) {
                     {/* Header - Medium.com style: Title first */}
                     <header className="mb-10">
                         <h1
-                            className="text-4xl md:text-5xl font-bold tracking-tight leading-tight"
+                            className="text-[32px] md:text-5xl font-bold tracking-tight leading-tight"
                             style={{
                                 fontFamily: "var(--font-article-heading)",
                             }}
@@ -71,14 +71,14 @@ export function PostPageClient({ post, readingTime }: PostPageClientProps) {
 
                         {/* Excerpt */}
                         {post.excerpt && (
-                            <p className="text-xl text-muted-foreground leading-relaxed mb-6">
+                            <p className="text-lg md:text-xl text-muted-foreground mb-6 mt-1">
                                 {post.excerpt}
                             </p>
                         )}
 
                         {/* Meta info */}
-                        <div className="flex items-center justify-between gap-4 py-4 border-y">
-                            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-4 border-y">
+                            <div className="flex items-center gap-3 text-sm md:text-sm text-muted-foreground">
                                 <time
                                     dateTime={new Date(
                                         post.createdAt,

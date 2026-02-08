@@ -159,10 +159,17 @@
     margin-right: auto;
     font-family:
         charter, Georgia, Cambria, "Times New Roman", Times, serif; /* Medium.com font stack */
-    font-size: 20px !important;
+    font-size: 18px !important; /* Mobile: 18px (2px smaller) */
     line-height: 1.58;
     color: oklch(0.15 0.02 260); /* Dark gray instead of pure black */
     letter-spacing: -0.003em;
+}
+
+/* Tablet and up: original 20px font size */
+@media (min-width: 768px) {
+    .prose-medium {
+        font-size: 20px !important;
+    }
 }
 
 .dark .prose-medium {
@@ -194,20 +201,39 @@
 }
 
 .prose-medium h1 {
-    font-size: 1.8em;
+    font-size: 1.6em; /* Mobile: smaller h1 */
     margin-top: 1em;
 }
 
 .prose-medium h2 {
-    font-size: 1.25em;
+    font-size: 1.2em; /* Mobile: smaller h2 */
 }
 
 .prose-medium h3 {
-    font-size: 1.15em;
+    font-size: 1.1em; /* Mobile: smaller h3 */
 }
 
 .prose-medium h4 {
-    font-size: 1.1em;
+    font-size: 1.05em; /* Mobile: smaller h4 */
+}
+
+/* Tablet and up: original heading sizes */
+@media (min-width: 768px) {
+    .prose-medium h1 {
+        font-size: 1.8em;
+    }
+
+    .prose-medium h2 {
+        font-size: 1.25em;
+    }
+
+    .prose-medium h3 {
+        font-size: 1.15em;
+    }
+
+    .prose-medium h4 {
+        font-size: 1.1em;
+    }
 }
 
 .prose-medium p {

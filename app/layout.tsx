@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { EB_Garamond, Karla, Josefin_Sans } from "next/font/google";
 import { Providers } from "@/components/providers";
+
 import "./globals.css";
 import "./uploadthing.css";
 

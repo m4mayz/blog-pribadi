@@ -49,9 +49,14 @@ interface PostPageClientProps {
         comments: Comment[];
     };
     readingTime: number;
+    authorUserId?: string;
 }
 
-export function PostPageClient({ post, readingTime }: PostPageClientProps) {
+export function PostPageClient({
+    post,
+    readingTime,
+    authorUserId,
+}: PostPageClientProps) {
     const [isCommentOpen, setIsCommentOpen] = useState(false);
 
     return (
@@ -273,6 +278,7 @@ export function PostPageClient({ post, readingTime }: PostPageClientProps) {
                 }))}
                 isOpen={isCommentOpen}
                 onClose={() => setIsCommentOpen(false)}
+                authorUserId={authorUserId}
             />
         </>
     );

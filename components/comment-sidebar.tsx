@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { createComment, deleteComment } from "@/lib/actions";
-import { Loader2, Trash2, X } from "lucide-react";
+import { Loader2, Trash2, X, LogOut } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { AuthModal } from "@/components/auth-modal";
@@ -38,6 +39,7 @@ interface CommentSidebarProps {
     comments: Comment[];
     isOpen: boolean;
     onClose: () => void;
+    authorUserId?: string;
 }
 
 // ... (existing imports, but remove useState if confirm logic moves - actually useState is fine for optimistics)
@@ -47,6 +49,7 @@ export function CommentSidebar({
     comments,
     isOpen,
     onClose,
+    authorUserId,
 }: CommentSidebarProps) {
     const { data: session } = useSession();
     const [content, setContent] = useState("");
@@ -132,9 +135,26 @@ export function CommentSidebar({
                 <div className="flex flex-col h-full">
                     {/* Header */}
                     <div className="flex items-center justify-between p-6 border-b">
-                        <h2 id="comments-title" className="text-xl font-bold">
-                            Comments ({optimisticComments.length})
-                        </h2>
+                        <div className="flex items-center gap-3">
+                            <h2
+                                id="comments-title"
+                                className="text-xl font-bold"
+                            >
+                                Comments ({optimisticComments.length})
+                            </h2>
+                            {session && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => signOut()}
+                                    className="h-8 text-muted-foreground hover:text-destructive"
+                                    aria-label="Logout"
+                                >
+                                    <LogOut className="h-4 w-4 mr-1" />
+                                    Logout
+                                </Button>
+                            )}
+                        </div>
                         <Button
                             variant="ghost"
                             size="icon"
@@ -281,6 +301,16 @@ export function CommentSidebar({
                                                         {comment.user.name ||
                                                             "Anonymous"}
                                                     </p>
+                                                    {authorUserId &&
+                                                        comment.user.id ===
+                                                            authorUserId && (
+                                                            <Badge
+                                                                variant="default"
+                                                                className="text-xs px-2 py-0 h-5"
+                                                            >
+                                                                Author
+                                                            </Badge>
+                                                        )}
                                                     <span className="text-xs text-muted-foreground">
                                                         {formatDistanceToNow(
                                                             new Date(

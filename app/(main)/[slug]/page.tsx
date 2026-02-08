@@ -64,6 +64,19 @@ export default async function PostPage({ params }: PostPageProps) {
     const wordCount = post.content.split(/\s+/).length;
     const readingTime = Math.ceil(wordCount / 200);
 
+    // Get admin user ID for author badge
+    const { prisma } = await import("@/lib/prisma");
+    const adminEmail = process.env.ADMIN_EMAIL;
+    let adminUserId: string | undefined;
+
+    if (adminEmail) {
+        const adminUser = await prisma.user.findUnique({
+            where: { email: adminEmail },
+            select: { id: true },
+        });
+        adminUserId = adminUser?.id;
+    }
+
     return (
         <PostPageClient
             post={{
@@ -76,6 +89,7 @@ export default async function PostPage({ params }: PostPageProps) {
                 })),
             }}
             readingTime={readingTime}
+            authorUserId={adminUserId}
         />
     );
 }

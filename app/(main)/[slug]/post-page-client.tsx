@@ -11,6 +11,7 @@ import { CommentSidebar } from "@/components/comment-sidebar";
 import { PostActions } from "@/components/post-actions";
 import { Eye } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { AdsterraNativeBanner } from "@/components/ads/adsterra-native-banner";
 
 // Helper function to extract YouTube video ID from various URL formats
 function extractYouTubeId(url: string): string | null {
@@ -248,7 +249,7 @@ export function PostPageClient({
                                     ) : (
                                         <div className="my-6">
                                             <SyntaxHighlighter
-                                                style={oneDark as any}
+                                                style={oneDark as { [key: string]: React.CSSProperties }}
                                                 language={match[1]}
                                                 PreTag="div"
                                                 className="rounded-lg"
@@ -265,6 +266,12 @@ export function PostPageClient({
                         >
                             {post.content}
                         </ReactMarkdown>
+                    </div>
+                    
+                    {/* Adsterra Native Banner - After Article Content */}
+                    <div className="mt-12 border-t pt-8">
+                        <p className="text-center text-xs text-muted-foreground mb-2 uppercase tracking-wider">Advertisement</p>
+                        <AdsterraNativeBanner />
                     </div>
                 </article>
             </div>

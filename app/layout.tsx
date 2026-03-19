@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { EB_Garamond, Karla, Josefin_Sans } from "next/font/google";
 import { Providers } from "@/components/providers";
+import { AdsterraPopunder } from "@/components/ads/adsterra-popunder";
 
 import "./globals.css";
 import "./uploadthing.css";
@@ -54,6 +55,7 @@ export default function RootLayout({
             <body
                 className={`${ebGaramond.variable} ${karla.variable} ${josefinSans.variable} font-body antialiased min-h-screen flex flex-col`}
             >
+                <AdsterraPopunder />
                 <Providers>{children}</Providers>
             </body>
         </html>

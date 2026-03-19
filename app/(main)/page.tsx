@@ -2,6 +2,7 @@ import { PostGrid } from "@/components/post-grid";
 import { getPosts } from "@/lib/actions";
 import { Suspense } from "react";
 import { PostGridSkeleton } from "@/components/skeletons/post-skeletons";
+import { AdsterraNativeBanner } from "@/components/ads/adsterra-native-banner";
 
 async function PostsSection() {
     const posts = await getPosts(); // Only published posts
@@ -38,6 +39,7 @@ export default function HomePage() {
                 <Suspense fallback={<PostGridSkeleton count={6} />}>
                     <PostsSection />
                 </Suspense>
+                <AdsterraNativeBanner />
             </section>
         </div>
     );

@@ -39,7 +39,13 @@ export default function HomePage() {
                 <Suspense fallback={<PostGridSkeleton count={6} />}>
                     <PostsSection />
                 </Suspense>
-                <AdsterraNativeBanner />
+                {/* Adsterra Native Banner*/}
+                <div className="mt-12 border-t pt-8">
+                    <p className="text-center text-xs text-muted-foreground mb-2 uppercase tracking-wider">
+                        Advertisement
+                    </p>
+                    <AdsterraNativeBanner />
+                </div>
             </section>
         </div>
     );
